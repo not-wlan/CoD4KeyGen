@@ -16,4 +16,4 @@ keygen.exe [optional 16 char sequence to use as a base]
 
 ### Make sure that if you choose to supply a base that it has to be alphanumeric and all uppercase!
 
-## If you want to know how i made it feel free to contact me!
+## If you want to know how I made it work feel free to contact me!
