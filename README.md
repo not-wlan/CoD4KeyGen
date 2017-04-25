@@ -1,6 +1,6 @@
 # CoD4KeyGen - EDUCATIONAL Purposes only!
 
-A Open Source CD Key Generator for CoD 4 (Educational Purposes only) written in C++.
+A Open Source CD Key Generator for "Call of Duty 4 - Modern Warfare" written in C++.
 
 # Usage
 
