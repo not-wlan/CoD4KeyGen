@@ -69,7 +69,7 @@ string GetChecksum(string key) {
 }
 
 int main(int argc, char * argv[]) {
-	printf("Open Source Keygen for CoD4 | http://github.com/jafrewa\n");
+	printf("Open Source Keygen for CoD4 | http://github.com/not-wlan\n");
 	printf("For EDUCATIONAL Purposes only!\n\n");
 
 	string base(16, ' ');
