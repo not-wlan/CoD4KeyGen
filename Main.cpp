@@ -1,109 +1,87 @@
-#include "Windows.h"
-#include <iostream>
 #include <string>
 #include <algorithm>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <cassert>
 
-using namespace std;
+template<class OutIt>
+void random_chars(OutIt begin, OutIt end) {
+    const auto randchar = []() -> char
+    {
+        constexpr const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return charset[rand() % (std::size(charset)-1)];
+    };
 
-// Macro to ensure valid user input
-static inline bool is_invalid_keychar(char c)
-{
-	return !(isalnum(c) && islower(c));
+    while (begin != end) {
+        *begin = randchar();
+        ++begin;
+    }
 }
 
-// Taken from https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
-std::string random_string(size_t length)
-{
-	auto randchar = []() -> char
-	{
-		const char charset[] =
-			"0123456789"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		const size_t max_index = (sizeof(charset) - 1);
-		return charset[rand() % max_index];
-	};
-	std::string str(length, 0);
-	std::generate_n(str.begin(), length, randchar);
-	return str;
+unsigned int get_checksum(const std::string& key) {
+    // We need 16 (Random) Characters for this to work
+    assert(key.length() == 16);
+
+    // Variables for the Loop
+    unsigned int v2 = 0;
+    auto v3 = 0;
+
+    do
+    {
+        // Binary XOR
+        v2 ^= *(std::uint8_t*)(v3 + key.c_str());
+        auto v4 = 8;
+        do
+        {
+            // Binary AND
+            if (v2 & 1)
+                // Binary XOR
+                v2 ^= 0x14002u;
+            // Binary Right Shift
+            v2 >>= 1;
+            --v4;
+        } while (v4);
+        ++v3;
+    } while (v3 < 16);
+    return v2;
 }
 
-string GetChecksum(string key) {
-	// We need 16 (Random) Characters for this to work
-	if (key.length() != 16) {
-		return "";
-	}
+int main(const int argc, char * argv[]) {
+    std::printf("Open Source Keygen for CoD4 | http://github.com/not-wlan\n");
+    std::printf("For EDUCATIONAL Purposes only!\n\n");
 
-	// Convert the string to a C String for some bitshifting
-	const char * cdkey_arr = key.c_str();
-	char checksum[5];
+    std::string base(16, ' ');
 
-	// Variables for the Loop
-	unsigned int v2 = 0; 
-	signed int v3 = 0;
-	signed int v4;
+    if (argc == 2) {
+        std::string option = argv[1];
 
-	do
-	{
-		// Binary XOR
-		v2 ^= *(BYTE *)(v3 + cdkey_arr);
-		v4 = 8;
-		do
-		{
-			// Binary AND
-			if (v2 & 1)
-				// Binary XOR
-				v2 ^= 0x14002u;
-			// Binary Right Shift
-			v2 >>= 1;
-			--v4;
-		} while (v4);
-		++v3;
-	} while (v3 < 16);
+        // User set a base
+        if (option.length() == 16) {
+            std::transform(option.begin(), option.end(), option.begin(), toupper);
 
-	// Format the checksum
-	sprintf_s(&checksum[0], sizeof(checksum), "%04x", v2);
-	return string(checksum);
-}
+            if (!std::all_of(option.begin(), option.end(), isalnum)) {
+                std::printf("Please make sure the entered base is all uppercase and alphanumeric!\n");
+                return EXIT_FAILURE;
+            }
+            base = option;
+        }
+        else {
+            printf("Usage: CoD4KeyGen.exe [optional 16 Char key base here]\n");
+            return EXIT_SUCCESS;
+        }
+    }
+    else {
+        // Seed the PRNG
+        srand(static_cast<unsigned>(time(nullptr)));
+        random_chars(base.begin(), base.end()); 
+    }
 
-int main(int argc, char * argv[]) {
-	printf("Open Source Keygen for CoD4 | http://github.com/not-wlan\n");
-	printf("For EDUCATIONAL Purposes only!\n\n");
+    const auto checksum = get_checksum(base);
 
-	string base(16, ' ');
-	string checksum;
-	string cdkey;
+    for(auto i = 0u; i < base.length(); i += 4) {
+        printf("%s ", base.substr(i, 4).c_str());
+    }
 
-	if (argc == 2) {
-		
-		string option = argv[1];
-
-		// User set a base
-		if (option.length() == 16) {
-			if (find_if(option.begin(), option.end(), is_invalid_keychar) == option.end()) {
-				printf("Please make sure the entered base is all uppercase and alphanumeric!\n");
-				return 0;
-			}
-			base = option;
-		}
-		else {
-			printf("Usage: CoD4KeyGen.exe [optional 16 Char key base here]\n");
-			return 0;
-		}
-	} else {
-		// Seed the PRNG
-		srand(static_cast<unsigned int>(time(NULL)) * GetCurrentProcessId());
-		base = random_string(16);
-	}
-
-	// For a prettier output make the checksum all uppercase
-	checksum = GetChecksum(base);
-	for (auto & c : checksum) c = toupper(c);
-
-	// Merge base and Checksum
-	cdkey = base + checksum;
-
-	cout << cdkey.substr(0, 4) << " " << cdkey.substr(4, 4) << " " << cdkey.substr(8, 4) << " " << cdkey.substr(12, 4) << " " << cdkey.substr(16, 4) << endl;
+    std::printf("%04X\n", checksum);
 }
